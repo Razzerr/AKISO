@@ -1,0 +1,5 @@
+cat test.c>pipe&
+gnome-terminal -- cat pipe - no-close
+
+#Jeżeli do potoku zostały wpisane jakieś dane to odczytanie danych w drugim terminalu występuje natychmiastowo, jednakże terminal wpisujący dane czeka na ich odczyt.
+#Jeżeli będziemy próbowali odczytać z pustego potoku to odczytujący terminal będzie oczekiwał aż jakieś dane zostaną wprowadzone do tego potoku.

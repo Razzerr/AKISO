@@ -1,0 +1,90 @@
+#!/bin/bash
+read1=0
+read2=0
+readAvg=0
+
+write1=0
+write2=0
+writeAvg=0
+
+systemUt=0
+
+readTab=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+writeTab=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+systemUtTab=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
+
+printTab=("|--------------------|   |--------------------|   |--------------------|" 
+	  "|Cur reads:          |   |Cur writes:         |   |Cur utilization:    |" 
+	  "|Max(20s):           |   |Max(20s):           |   |(Avg of last minute)|" 
+	  "|--------------------|   |--------------------|   |--------------------|" 
+	  "|                    |   |                    |   |                    |" 
+	  "|                    |   |                    |   |                    |"  
+	  "|                    |   |                    |   |                    |" 
+	  "|                    |   |                    |   |                    |"  
+	  "|                    |   |                    |   |                    |" 
+	  "|                    |   |                    |   |                    |"  
+	  "|                    |   |                    |   |                    |" 
+	  "|                    |   |                    |   |                    |"  
+	  "|                    |   |                    |   |                    |" 
+	  "|                    |   |                    |   |                    |"
+	  "|                    |   |                    |   |                    |"  )
+
+
+read1=`cat /proc/diskstats | grep -m 1 "sda" | awk '{ print $6 }'`
+write1=`cat /proc/diskstats | grep -m 1 "sda" | awk '{ print $10 }'`
+
+while true
+do
+	read2=$read1
+	write2=$write1
+	sleep 1
+	read1=`cat /proc/diskstats | grep -m 1 "sda" | awk '{ print $6 }'`
+	write1=`cat /proc/diskstats | grep -m 1 "sda" | awk '{ print $10 }'`
+	systemUt=`cat /proc/loadavg | awk '{ print $1*100 }'`
+
+	readAvg=$((($read1-$read2)*512))
+	writeAvg=$((($write1-$write2)*512))
+
+	readTab=(${readTab[@]:1:20} $readAvg)
+	writeTab=(${writeTab[@]:1:20} $writeAvg)
+	systemUtTab=(${systemUtTab[@]:1:20} $systemUt)
+
+	IFS=$'\n'
+	maxReads=`sort -r <<<"${readTab[*]}" | head -n1`
+	maxWrites=`sort -r <<<"${writeTab[*]}" | head -n1`
+	unset IFS
+	if (($maxReads<10)); then maxReads=10;fi
+	if (($maxWrites<10)); then maxWrites=10;fi
+	
+
+	tput clear
+
+	for r in "${printTab[@]}"; do
+		printf  "${r}\n"
+	done
+	
+	if [ $(($readAvg/(1024*1024))) -gt 0 ]; then printf `tput cup 1 12`$(($readAvg/(1024*1024)))"MB/s"
+	elif [ $(($readAvg/(1024))) -gt 0 ]; then printf `tput cup 1 12`$(($readAvg/(1024)))"KB/s"
+	else printf `tput cup 1 12`$readAvg"B/s"; fi
+	
+	if [ $(($maxReads/(1024*1024))) -gt 0 ]; then printf `tput cup 2 12`$(($maxReads/(1024*1024)))"MB/s"
+	elif [ $(($maxReads/(1024))) -gt 0 ]; then printf `tput cup 2 12`$(($maxReads/(1024)))"KB/s"
+	else printf `tput cup 2 12`$maxReads"B/s"; fi
+
+	if [ $(($writeAvg/(1024*1024))) -gt 0 ]; then printf `tput cup 1 38`$(($writeAvg/(1024*1024)))"MB/s"
+	elif [ $(($writeAvg/(1024))) -gt 0 ]; then printf `tput cup 1 38`$(($writeAvg/(1024)))"KB/s"
+	else printf `tput cup 1 38`$writeAvg"B/s"; fi
+
+	if [ $(($maxWrites/(1024*1024))) -gt 0 ]; then printf `tput cup 2 38`$(($maxWrites/(1024*1024)))"MB/s"
+	elif [ $(($maxWrites/(1024))) -gt 0 ]; then printf `tput cup 2 38`$(($maxWrites/(1024)))"KB/s"
+	else printf `tput cup 2 38`$maxWrites"B/s"; fi
+
+	printf `tput cup 1 68`$systemUt
+	
+	for i in {0..19}; do
+		printf `tput cup -- $((14-((${readTab[i]}+$maxReads/20)/($maxReads/10)))) $((1+$i))`+
+		printf `tput cup -- $((14-((${writeTab[i]}+$maxWrites/20)/($maxWrites/10)))) $(($i+26))`+
+		printf `tput cup -- $((14-(${systemUtTab[i]}/10))) $(($i+51))`+
+	done
+done
+

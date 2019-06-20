@@ -1,0 +1,4 @@
+#Katalog /dev zawiera pliki dedykowane wszystkim urządzeniom współpracującymi z daną jednostką.
+#Katalog /proc jest folderem zawierającym "pliki" informujące o jądrze, uruchomionych procesach i konfiguracji.
+
+sudo dd if=/dev/sda bs=512 count=63 | hexdump -C

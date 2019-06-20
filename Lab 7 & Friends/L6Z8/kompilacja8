@@ -1,0 +1,2 @@
+nasm -felf zad8.asm
+gcc -m32 zad8.c zad8.o -o zad8

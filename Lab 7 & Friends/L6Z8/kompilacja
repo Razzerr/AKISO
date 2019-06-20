@@ -1,0 +1,1 @@
+nasm -f elf main.asm && gcc -m32 -o main main.o

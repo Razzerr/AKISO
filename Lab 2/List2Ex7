@@ -1,0 +1,18 @@
+#Przygotowanie specjalnego folderu na potrzeby zadania
+mkdir Ex7
+cd Ex7
+touch ABCabc "Aaa Bbb Ccc" "aAAaBbB cCc"
+ls
+
+#Faktyczny skrypt
+for filename in *
+do 
+	n=`echo $filename | tr [:upper:] [:lower:]`
+	mv "$filename" "$n"
+done
+
+#Wylistowanie zmienionych elementów oraz usunięcię folderu testowego (w celu powtórzenia skryptu)
+ls
+cd ../
+rm -rf Ex7
+

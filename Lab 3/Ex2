@@ -1,0 +1,18 @@
+#!/bin/bash
+
+tempArray=( Name Pid PPid State Files )
+touch processes
+echo "${tempArray[*]}" >> processes
+
+for f in /proc/*; do
+	if [[ `echo $f | cut -c 7-` =~ ^[0-9]+$ ]]; then
+	tempArray=(`cat $f/status | sed '1q;d' | awk '{ print $2 }'` 
+		`cat $f/status | sed '6q;d' | awk '{ print $2 }'`
+		`cat $f/status | sed '7q;d' | awk '{ print $2 }'`
+		`cat $f/status | sed '3q;d' | awk '{ print $2 }'`
+		`ls $f/fd/ | wc -l`)
+	echo "${tempArray[*]}" >> processes
+	fi
+done
+column -t processes
+rm processes
